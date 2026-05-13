@@ -22,9 +22,8 @@ sports_analytics/
 │   ├── app.py                     ← Application factory (wiring / DI)
 │   └── routes.py                  ← RESTful endpoints + CRUD + auth
 ├── utils/
-│   └── auth.py                    ← Token-based auth decorators
-└── tests/
-    └── test_project.py            ← 38 unit tests (all pass)
+│   └── auth.py                    ← Token-based auth decorators 
+└── test_project.py            ← 38 unit tests (all pass)
 ```
 
 ---
