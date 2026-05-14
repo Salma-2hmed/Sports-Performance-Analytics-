@@ -1,0 +1,7 @@
+$kind: http-request
+name: http://127.0.0.1:5000/athletes
+url: http://127.0.0.1:5000/athletes
+method: GET
+headers:
+  Authorization: Bearer admin-token-001
+order: 2093638038700578

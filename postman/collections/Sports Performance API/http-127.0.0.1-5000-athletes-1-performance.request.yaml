@@ -1,0 +1,20 @@
+$kind: http-request
+name: http://127.0.0.1:5000/athletes/1/performance
+url: http://127.0.0.1:5000/athletes/1/performance
+method: POST
+headers:
+  Authorization: Bearer admin-token-001
+body:
+  type: json
+  content: "{\r
+
+    \  \"metrics\": {\r
+
+    \    \"speed\": 90,\r
+
+    \    \"strength\": 85\r
+
+    \  }\r
+
+    }"
+order: 3826285769413652

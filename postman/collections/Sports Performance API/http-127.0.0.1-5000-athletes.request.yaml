@@ -1,0 +1,22 @@
+$kind: http-request
+name: http://127.0.0.1:5000/athletes
+url: http://127.0.0.1:5000/athletes
+method: POST
+headers:
+  Authorization: Bearer admin-token-001
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Ahmed\",\r
+
+    \  \"age\": 24,\r
+
+    \  \"sport\": \"Football\",\r
+
+    \  \"team\": \"Al Ahly\",\r
+
+    \  \"nationality\": \"Egyptian\"\r
+
+    }"
+order: 1778788372303

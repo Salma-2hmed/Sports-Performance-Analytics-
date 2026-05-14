@@ -1,0 +1,7 @@
+$kind: http-request
+name: http://127.0.0.1:5000/analytics/pipeline
+url: http://127.0.0.1:5000/analytics/pipeline
+method: GET
+headers:
+  Authorization: Bearer admin-token-001
+order: 3880400848045458
