@@ -6,7 +6,7 @@ Wires together: Singleton DB, EventBus, Observers, Service, and Routes.
 Demonstrates Dependency Injection (DIP) throughout.
 """
 
-from flask import Flask
+from flask import Flask, request, jsonify
 from patterns.design_patterns import (
     DatabaseManager,
     EventBus,
@@ -19,6 +19,24 @@ from api.routes import athletes_bp, analytics_bp, misc_bp, init_routes
 
 def create_app() -> Flask:
     app = Flask(__name__)
+
+    # ── CORS: allow browser requests from any origin ───────────────────────
+    @app.after_request
+    def add_cors(response):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        return response
+
+    @app.before_request
+    def handle_options():
+        if request.method == "OPTIONS":
+            from flask import make_response
+            r = make_response()
+            r.headers["Access-Control-Allow-Origin"] = "*"
+            r.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+            r.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+            return r, 200
 
     # ── 1. Singleton DB (one instance for entire app) ──────────────────────
     db = DatabaseManager()

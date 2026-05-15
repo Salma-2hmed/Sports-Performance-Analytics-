@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sports Analytics — Project 48</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f5f4; --surface: #ffffff; --border: #e5e5e3;
+    --text: #1c1c1a; --muted: #737370;
+    --accent: #2563eb; --accent-bg: #eff6ff;
+    --green: #16a34a; --green-bg: #f0fdf4;
+    --orange: #ea580c; --orange-bg: #fff7ed;
+    --danger: #dc2626;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* LOGIN */
+  #login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; transition: opacity .3s; }
+  #login-page.hidden { opacity: 0; pointer-events: none; position: fixed; }
+  .login-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 380px; }
+  .login-box h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .login-box p { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  select, input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 7px; font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); outline: none; margin-bottom: 16px; transition: border-color .15s; appearance: none; }
+  select:focus, input:focus { border-color: var(--accent); }
+  .token-pill { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; border-radius: 6px; padding: 7px 12px; margin-bottom: 24px; }
+  .btn { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 7px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .15s; }
+  .btn:hover { background: #1d4ed8; }
+  .error-msg { color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center; display: none; }
+
+  /* DASHBOARD */
+  #dashboard { display: none; }
+  #dashboard.visible { display: block; }
+
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .brand { font-size: 15px; font-weight: 600; }
+  .brand span { color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .badge { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .btn-sm { padding: 5px 12px; background: none; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; cursor: pointer; color: var(--muted); font-family: inherit; transition: all .15s; }
+  .btn-sm:hover { border-color: var(--danger); color: var(--danger); }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+  .stat-card { background: var(--surface); padding: 20px 24px; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 600; }
+  .stat-value.blue { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.orange { color: var(--orange); }
+
+  .content { padding: 24px; max-width: 1100px; margin: 0 auto; }
+  .section-title { font-size: 16px; font-weight: 600; }
+
+  .filter-tabs { display: flex; gap: 6px; margin: 16px 0 20px; }
+  .tab { padding: 6px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); font-size: 13px; cursor: pointer; font-family: inherit; color: var(--muted); transition: all .15s; }
+  .tab.active, .tab:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+  .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .player-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+  .player-card:hover { border-color: #93c5fd; box-shadow: 0 2px 8px rgba(37,99,235,.08); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .player-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .player-meta { font-size: 12px; color: var(--muted); }
+  .sport-pill { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .pill-f { background: var(--green-bg); color: var(--green); border: 1px solid #bbf7d0; }
+  .pill-b { background: var(--orange-bg); color: var(--orange); border: 1px solid #fed7aa; }
+  .pill-d { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .card-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+  .mini-stat { text-align: center; }
+  .mini-val { font-size: 17px; font-weight: 600; }
+  .mini-key { font-size: 10px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: .3px; }
+
+  .add-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-top: 28px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; margin-top: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { margin-bottom: 5px; }
+  .form-group select, .form-group input { margin-bottom: 0; }
+  .btn-green { margin-top: 16px; padding: 9px 20px; background: var(--green); color: #fff; border: none; border-radius: 7px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .btn-green:hover { background: #15803d; }
+
+  /* MODAL */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: center; justify-content: center; z-index: 200; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 20px 24px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .modal-header h2 { font-size: 17px; font-weight: 600; }
+  .close-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; padding: 2px 6px; border-radius: 4px; }
+  .close-btn:hover { color: var(--danger); }
+  .modal-body { padding: 20px 24px 24px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .detail-key { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+  .detail-val { font-size: 14px; font-weight: 500; }
+  .grade-row { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .grade-box { width: 56px; height: 56px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600; flex-shrink: 0; }
+  .g-A { background: var(--green-bg); color: var(--green); border: 1px solid #bbf7d0; }
+  .g-B { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+  .g-C { background: var(--orange-bg); color: var(--orange); border: 1px solid #fed7aa; }
+  .g-D { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+  .grade-info { font-size: 13px; color: var(--muted); }
+  .grade-info strong { color: var(--text); font-size: 15px; }
+  .perf-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+  .metric-row { margin-bottom: 10px; }
+  .metric-top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .metric-top span:last-child { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .bar-bg { height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width .7s ease; }
+
+  /* POSTMAN */
+  .postman-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin-top: 28px; }
+  .ep-list { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+  .ep-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg); border-radius: 7px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .ep-row:hover { background: var(--accent-bg); }
+  .method { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; min-width: 46px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+  .m-get { background: #dbeafe; color: #1d4ed8; }
+  .m-post { background: #dcfce7; color: #15803d; }
+  .m-put { background: #ffedd5; color: #c2410c; }
+  .m-del { background: #fee2e2; color: #b91c1c; }
+  .ep-url { color: var(--text); flex: 1; }
+  .ep-desc { color: var(--muted); font-family: 'Inter', sans-serif; font-size: 11px; }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(60px); opacity: 0; transition: all .25s; z-index: 999; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: #bbf7d0; color: var(--green); }
+  .toast.error { border-color: #fecaca; color: var(--danger); }
+  .loading { text-align: center; padding: 48px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div id="login-page">
+  <div class="login-box">
+    <h1>Sports Analytics</h1>
+    <p>Project 48 — sign in to continue</p>
+    <label>Role</label>
+    <select id="role-select" onchange="updateToken()">
+      <option value="admin-token-001">Admin</option>
+      <option value="coach-token-002">Coach</option>
+      <option value="analyst-token-003">Analyst</option>
+    </select>
+    <label>Token</label>
+    <div class="token-pill" id="token-display">admin-token-001</div>
+    <button class="btn" onclick="login()">Sign in</button>
+    <div class="error-msg" id="login-error">Cannot connect — make sure Flask is running on port 5000</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="topbar">
+    <div class="brand">Sports <span>Analytics</span></div>
+    <div class="topbar-right">
+      <span class="badge" id="role-badge">ADMIN</span>
+      <button class="btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total athletes</div><div class="stat-value blue" id="s-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Average age</div><div class="stat-value" id="s-age">—</div></div>
+    <div class="stat-card"><div class="stat-label">Football</div><div class="stat-value green" id="s-football">—</div></div>
+    <div class="stat-card"><div class="stat-label">Basketball</div><div class="stat-value orange" id="s-basketball">—</div></div>
+  </div>
+
+  <div class="content">
+    <div class="section-title">Athletes</div>
+    <div class="filter-tabs">
+      <button class="tab active" onclick="filter('all',this)">All</button>
+      <button class="tab" onclick="filter('Football',this)">Football</button>
+      <button class="tab" onclick="filter('Basketball',this)">Basketball</button>
+    </div>
+    <div class="players-grid" id="grid"><div class="loading">Loading...</div></div>
+
+    <div class="add-section" id="add-section" style="display:none">
+      <div class="section-title">Add athlete</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Name *</label><input id="f-name" placeholder="Mohamed Salah"/></div>
+        <div class="form-group"><label>Age *</label><input id="f-age" placeholder="25" type="number"/></div>
+        <div class="form-group"><label>Sport</label><select id="f-sport"><option>Football</option><option>Basketball</option><option>Tennis</option><option>Swimming</option></select></div>
+        <div class="form-group"><label>Team</label><input id="f-team" placeholder="Al Ahly"/></div>
+        <div class="form-group"><label>Nationality</label><input id="f-nat" placeholder="Egyptian"/></div>
+        <div class="form-group"><label>Position</label><input id="f-pos" placeholder="Forward"/></div>
+      </div>
+      <button class="btn-green" onclick="addPlayer()">Add athlete</button>
+    </div>
+
+    <div class="postman-section">
+      <div class="section-title">API endpoints</div>
+      <p style="color:var(--muted);font-size:12px;margin-top:6px;">Header: <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;">Authorization: Bearer admin-token-001</code></p>
+      <div class="ep-list">
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/athletes</span><span class="ep-desc">List all</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/athletes/1</span><span class="ep-desc">Get one</span></div>
+        <div class="ep-row"><span class="method m-post">POST</span><span class="ep-url">localhost:5000/athletes</span><span class="ep-desc">Create</span></div>
+        <div class="ep-row"><span class="method m-put">PUT</span><span class="ep-url">localhost:5000/athletes/1</span><span class="ep-desc">Update</span></div>
+        <div class="ep-row"><span class="method m-del">DEL</span><span class="ep-url">localhost:5000/athletes/1</span><span class="ep-desc">Delete (admin only)</span></div>
+        <div class="ep-row"><span class="method m-post">POST</span><span class="ep-url">localhost:5000/athletes/1/performance</span><span class="ep-desc">Log session</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/athletes/1/report</span><span class="ep-desc">Performance report</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/analytics/pipeline?sport=Football</span><span class="ep-desc">HOF pipeline</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/analytics/aggregate</span><span class="ep-desc">Aggregate stats</span></div>
+        <div class="ep-row"><span class="method m-post">POST</span><span class="ep-url">localhost:5000/import/fifa</span><span class="ep-desc">Adapter import</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/sports/config?sport=Football</span><span class="ep-desc">Flyweight config</span></div>
+        <div class="ep-row"><span class="method m-get">GET</span><span class="ep-url">localhost:5000/events/log</span><span class="ep-desc">Observer log</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Player</h2>
+      <button class="close-btn" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000';
+let TOKEN = '', ROLE = '', allAthletes = [];
+const ROLES = {'admin-token-001':'ADMIN','coach-token-002':'COACH','analyst-token-003':'ANALYST'};
+
+function updateToken() {
+  document.getElementById('token-display').textContent = document.getElementById('role-select').value;
+}
+
+async function login() {
+  const token = document.getElementById('role-select').value;
+  try {
+    const r = await fetch(`${API}/athletes`, {headers:{Authorization:`Bearer ${token}`}});
+    if (!r.ok) throw new Error();
+    TOKEN = token; ROLE = ROLES[token];
+    document.getElementById('role-badge').textContent = ROLE;
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('dashboard').classList.add('visible');
+    if (ROLE !== 'ANALYST') document.getElementById('add-section').style.display = 'block';
+    loadAll();
+  } catch {
+    const e = document.getElementById('login-error');
+    e.style.display = 'block';
+    setTimeout(() => e.style.display = 'none', 4000);
+  }
+}
+
+function logout() {
+  TOKEN = ''; ROLE = '';
+  document.getElementById('login-page').classList.remove('hidden');
+  document.getElementById('dashboard').classList.remove('visible');
+}
+
+async function loadAll() {
+  const [ar, ag] = await Promise.all([
+    fetch(`${API}/athletes`,{headers:{Authorization:`Bearer ${TOKEN}`}}).then(r=>r.json()),
+    fetch(`${API}/analytics/aggregate`,{headers:{Authorization:`Bearer ${TOKEN}`}}).then(r=>r.json()),
+  ]);
+  allAthletes = ar;
+  document.getElementById('s-total').textContent = ag.total_athletes;
+  document.getElementById('s-age').textContent = ag.average_age;
+  document.getElementById('s-football').textContent = ar.filter(a=>a.sport==='Football').length;
+  document.getElementById('s-basketball').textContent = ar.filter(a=>a.sport==='Basketball').length;
+  render(ar);
+}
+
+function render(list) {
+  const g = document.getElementById('grid');
+  if (!list.length) { g.innerHTML = '<div class="loading">No athletes found</div>'; return; }
+  g.innerHTML = list.map(a => {
+    const pc = a.sport==='Football'?'pill-f':a.sport==='Basketball'?'pill-b':'pill-d';
+    const stats = a.sport==='Football'
+      ? [['Goals',a.goals??'—'],['Assists',a.assists??'—'],['Matches',a.matches_played??'—']]
+      : a.sport==='Basketball'
+      ? [['PPG',a.points_per_game??'—'],['RPG',a.rebounds_per_game??'—'],['APG',a.assists_per_game??'—']]
+      : [['Age',a.age],['Team',(a.team||'').slice(0,6)],['Sport',a.sport.slice(0,4)]];
+    return `<div class="player-card" onclick="openPlayer(${a.id})">
+      <div class="card-top">
+        <div><div class="player-name">${a.name}</div><div class="player-meta">${a.team||'—'} · Age ${a.age}</div></div>
+        <span class="sport-pill ${pc}">${a.sport}</span>
+      </div>
+      <div class="card-stats">${stats.map(([k,v])=>`<div class="mini-stat"><div class="mini-val">${v}</div><div class="mini-key">${k}</div></div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function filter(sport, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render(sport==='all'?allAthletes:allAthletes.filter(a=>a.sport===sport));
+}
+
+async function openPlayer(id) {
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Loading...</div>';
+  const [a, r] = await Promise.all([
+    fetch(`${API}/athletes/${id}`,{headers:{Authorization:`Bearer ${TOKEN}`}}).then(x=>x.json()),
+    fetch(`${API}/athletes/${id}/report`,{headers:{Authorization:`Bearer ${TOKEN}`}}).then(x=>x.json()),
+  ]);
+  document.getElementById('modal-title').textContent = a.name;
+  const grade = r.grade||'—';
+  const metrics = (r.performances||[]).slice(-1)[0]?.metrics||{};
+  const extra = a.sport==='Football'
+    ? `<div class="detail-item"><div class="detail-key">Goals</div><div class="detail-val">${a.goals??'—'}</div></div>
+       <div class="detail-item"><div class="detail-key">Assists</div><div class="detail-val">${a.assists??'—'}</div></div>`
+    : a.sport==='Basketball'
+    ? `<div class="detail-item"><div class="detail-key">PPG</div><div class="detail-val">${a.points_per_game??'—'}</div></div>
+       <div class="detail-item"><div class="detail-key">RPG</div><div class="detail-val">${a.rebounds_per_game??'—'}</div></div>`
+    : '';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-key">Team</div><div class="detail-val">${a.team||'—'}</div></div>
+      <div class="detail-item"><div class="detail-key">Nationality</div><div class="detail-val">${a.nationality||'—'}</div></div>
+      <div class="detail-item"><div class="detail-key">Age</div><div class="detail-val">${a.age}</div></div>
+      <div class="detail-item"><div class="detail-key">Position</div><div class="detail-val">${a.position||'—'}</div></div>
+      ${extra}
+    </div>
+    ${grade!=='—' ? `
+      <div class="grade-row">
+        <div class="grade-box g-${grade}">${grade}</div>
+        <div class="grade-info"><strong>Grade ${grade}</strong><br>Avg: ${r.average_score||0} &middot; ${r.total_sessions} sessions</div>
+      </div>
+      ${Object.keys(metrics).length ? `<div class="perf-title">Last session</div>
+      ${Object.entries(metrics).map(([k,v])=>`
+        <div class="metric-row">
+          <div class="metric-top"><span>${k}</span><span>${v}</span></div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(v,100)}%"></div></div>
+        </div>`).join('')}` : ''}
+    ` : '<p style="color:var(--muted);font-size:13px;">No performance data yet.</p>'}`;
+}
+
+function closeModal(e) { if (e.target.id==='modal-backdrop') closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-backdrop').classList.remove('open'); }
+
+async function addPlayer() {
+  const name = document.getElementById('f-name').value.trim();
+  const age = parseInt(document.getElementById('f-age').value);
+  if (!name||!age) { toast('Name and age are required','error'); return; }
+  const res = await fetch(`${API}/athletes`, {
+    method:'POST',
+    headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+    body: JSON.stringify({name,age,sport:document.getElementById('f-sport').value,team:document.getElementById('f-team').value,nationality:document.getElementById('f-nat').value,position:document.getElementById('f-pos').value}),
+  });
+  if (res.ok) {
+    toast(`${name} added`,'success');
+    ['f-name','f-age','f-team','f-nat','f-pos'].forEach(id=>document.getElementById(id).value='');
+    loadAll();
+  } else toast('Failed','error');
+}
+
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+document.addEventListener('keydown',e=>{
+  if (e.key==='Enter'&&!document.getElementById('login-page').classList.contains('hidden')) login();
+  if (e.key==='Escape') closeModalDirect();
+});
+</script>
+</body>
+</html>
