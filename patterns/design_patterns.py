@@ -1,16 +1,13 @@
-
 import threading
 from typing import Callable, Dict, List, Any
-
 class DatabaseManager:
-
     _instance = None
     _lock = threading.Lock()
 
     def __new__(cls):
         if cls._instance is None:
             with cls._lock:
-                if cls._instance is None:          # double-checked locking
+                if cls._instance is None:
                     cls._instance = super().__new__(cls)
                     cls._instance._init_store()
         return cls._instance
@@ -59,7 +56,6 @@ class EventBus:
             handler(data)
 
 
-# ── Pre-wired observers (concrete listeners) ──────────────────────────────────
 class PerformanceAlertObserver:
     def __init__(self, threshold: float = 90.0):
         self.threshold = threshold
