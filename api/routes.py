@@ -1,17 +1,4 @@
-"""
-api/routes.py
--------------
-RESTful API endpoints for:
-  - Athletes   : GET /athletes, POST /athletes, GET/PUT/DELETE /athletes/<id>
-  - Performance: POST /athletes/<id>/performance, GET /athletes/<id>/report
-  - Analytics  : GET /analytics/pipeline
-  - Adapter    : POST /import/<source>   (Adapter pattern demo)
-  - Flyweight  : GET  /sports/config      (Flyweight pattern demo)
-  - Events     : GET  /events/log         (Observer pattern demo)
-"""
-
 from flask import Blueprint, request, jsonify
-
 from utils.auth import require_auth, require_role
 from patterns.design_patterns import ExternalDataAdapter, SportConfigFlyweight
 
@@ -19,12 +6,9 @@ athletes_bp = Blueprint("athletes", __name__)
 analytics_bp = Blueprint("analytics", __name__)
 misc_bp = Blueprint("misc", __name__)
 
-
-# ── helper injected at app-creation time ──────────────────────────────────────
 _service = None
 _audit_observer = None
 _alert_observer = None
-
 
 def init_routes(service, audit_obs, alert_obs):
     global _service, _audit_observer, _alert_observer
@@ -33,9 +17,6 @@ def init_routes(service, audit_obs, alert_obs):
     _alert_observer = alert_obs
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ATHLETE CRUD
-# ══════════════════════════════════════════════════════════════════════════════
 @athletes_bp.route("/athletes", methods=["GET"])
 @require_auth
 def list_athletes():
@@ -81,9 +62,6 @@ def delete_athlete(athlete_id):
     return jsonify({"message": f"Athlete {athlete_id} deleted"}), 200
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PERFORMANCE LOGGING
-# ══════════════════════════════════════════════════════════════════════════════
 @athletes_bp.route("/athletes/<int:athlete_id>/performance", methods=["POST"])
 @require_role("admin", "coach", "analyst")
 def log_performance(athlete_id):
@@ -99,7 +77,6 @@ def log_performance(athlete_id):
 @athletes_bp.route("/athletes/<int:athlete_id>/report", methods=["GET"])
 @require_auth
 def get_report(athlete_id):
-    # HOF formatters injected at call-time (not hard-coded in service)
     def add_summary(report: dict) -> dict:
         perfs = report.get("performances", [])
         if perfs:
@@ -124,9 +101,6 @@ def get_report(athlete_id):
     return jsonify(report)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ANALYTICS — HOF pipeline demo
-# ══════════════════════════════════════════════════════════════════════════════
 @analytics_bp.route("/analytics/pipeline", methods=["GET"])
 @require_auth
 def analytics_pipeline():
@@ -153,7 +127,6 @@ def analytics_pipeline():
         "athletes": result,
     })
 
-
 @analytics_bp.route("/analytics/aggregate", methods=["GET"])
 @require_auth
 def aggregate():
@@ -168,10 +141,6 @@ def aggregate():
         "average_age": round(total_age / count, 2) if count else 0,
     })
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# ADAPTER demo — import from external format
-# ══════════════════════════════════════════════════════════════════════════════
 @misc_bp.route("/import/<source>", methods=["POST"])
 @require_role("admin")
 def import_from_source(source):
@@ -190,9 +159,6 @@ def import_from_source(source):
     }), 201
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# FLYWEIGHT demo
-# ══════════════════════════════════════════════════════════════════════════════
 @misc_bp.route("/sports/config", methods=["GET"])
 @require_auth
 def sport_config():
@@ -205,11 +171,6 @@ def sport_config():
         "key_metrics": list(cfg.key_metrics),
         "flyweight_pool_size": SportConfigFlyweight.pool_size(),
     })
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# OBSERVER demo — view audit / alert logs
-# ══════════════════════════════════════════════════════════════════════════════
 @misc_bp.route("/events/log", methods=["GET"])
 @require_role("admin")
 def event_log():

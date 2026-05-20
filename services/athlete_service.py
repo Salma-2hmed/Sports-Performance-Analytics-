@@ -1,14 +1,4 @@
-"""
-services/athlete_service.py
-----------------------------
-SOLID Principles Applied:
-- ISP  : Thin interface protocols (IAthleteReader, IAthleteWriter, IPerformanceLogger)
-         so clients depend only on what they actually need
-- DIP  : AthleteService depends on the abstract DatabaseManager interface,
-         not on a concrete database driver
-- Higher-Order Functions: processing pipelines built with map/filter/reduce
-  and custom HOFs that accept callable strategies at runtime
-"""
+
 
 from typing import Callable, List, Optional, Any, Dict
 from functools import reduce
@@ -23,43 +13,30 @@ from patterns.design_patterns import (
 )
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ISP — segregated interface protocols
-# ══════════════════════════════════════════════════════════════════════════════
 class IAthleteReader:
-    """Read-only athlete operations."""
     def get_athlete(self, athlete_id: int) -> Optional[Athlete]: ...
     def get_all_athletes(self) -> List[Athlete]: ...
 
 
 class IAthleteWriter:
-    """Write athlete operations."""
     def create_athlete(self, data: dict) -> Athlete: ...
     def update_athlete(self, athlete_id: int, data: dict) -> Optional[Athlete]: ...
     def delete_athlete(self, athlete_id: int) -> bool: ...
 
 
 class IPerformanceLogger:
-    """Performance recording operations."""
     def log_performance(self, athlete_id: int, metrics: dict,
                         notes: str = "") -> PerformanceRecord: ...
     def get_performances(self, athlete_id: int) -> List[PerformanceRecord]: ...
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DIP + Higher-Order Functions — AthleteService
-# ══════════════════════════════════════════════════════════════════════════════
+
 class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
-    """
-    Concrete service.  Depends on abstractions (EventBus, DatabaseManager)
-    injected via constructor (DIP).
-    """
 
     def __init__(self, db: DatabaseManager, event_bus: EventBus):
         self._db = db                   # DIP: injected, not created here
         self._bus = event_bus           # DIP: injected, not created here
 
-    # ── IAthleteWriter ────────────────────────────────────────────────────────
     def create_athlete(self, data: dict) -> Athlete:
         sport = data.get("sport", "")
         if sport == "Football":
@@ -131,14 +108,12 @@ class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
             self._bus.publish("athlete_deleted", {"id": athlete_id})
         return deleted
 
-    # ── IAthleteReader ────────────────────────────────────────────────────────
     def get_athlete(self, athlete_id: int) -> Optional[Athlete]:
         return self._db.get_athlete(athlete_id)
 
     def get_all_athletes(self) -> List[Athlete]:
         return self._db.get_all_athletes()
 
-    # ── IPerformanceLogger ────────────────────────────────────────────────────
     def log_performance(self, athlete_id: int, metrics: dict,
                         notes: str = "") -> PerformanceRecord:
         record = PerformanceRecord(
@@ -158,9 +133,7 @@ class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
     def get_performances(self, athlete_id: int) -> List[PerformanceRecord]:
         return self._db.get_performances(athlete_id)
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # HIGHER-ORDER FUNCTIONS — processing pipelines
-    # ══════════════════════════════════════════════════════════════════════════
+
 
     def filter_athletes(self, predicate: Callable[[Athlete], bool]) -> List[Athlete]:
         """HOF: filter athletes by any caller-supplied predicate."""
@@ -175,16 +148,6 @@ class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
         return reduce(reducer, self._db.get_all_athletes(), initial)
 
     def process_pipeline(self, *steps: Callable) -> List[Any]:
-        """
-        HOF pipeline: chain arbitrary processing steps.
-        Each step receives the output of the previous step.
-        Example:
-            service.process_pipeline(
-                lambda athletes: filter(lambda a: a.age > 25, athletes),
-                lambda athletes: map(lambda a: a.to_dict(), athletes),
-                list,
-            )
-        """
         data: Any = self._db.get_all_athletes()
         for step in steps:
             data = step(data)
@@ -192,10 +155,7 @@ class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
 
     def build_report(self, athlete_id: int,
                      formatters: List[Callable[[dict], dict]]) -> dict:
-        """
-        HOF: apply a list of formatter functions to enrich a performance report.
-        Formatters are composed at call-time, not hard-coded in the service.
-        """
+
         athlete = self._db.get_athlete(athlete_id)
         if not athlete:
             return {"error": "Athlete not found"}

@@ -11,7 +11,6 @@ from typing import Dict, Any
 
 @dataclass
 class PerformanceRecord:
-    """A single performance snapshot for one athlete in one session."""
     athlete_id: int
     session_date: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metrics: Dict[str, Any] = field(default_factory=dict)

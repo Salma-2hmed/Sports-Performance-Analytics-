@@ -1,11 +1,3 @@
-"""
-api/app.py
-----------
-Flask application factory.
-Wires together: Singleton DB, EventBus, Observers, Service, and Routes.
-Demonstrates Dependency Injection (DIP) throughout.
-"""
-
 from flask import Flask, request, jsonify
 from patterns.design_patterns import (
     DatabaseManager,
@@ -15,12 +7,9 @@ from patterns.design_patterns import (
 )
 from services.athlete_service import AthleteService
 from api.routes import athletes_bp, analytics_bp, misc_bp, init_routes
-
-
 def create_app() -> Flask:
     app = Flask(__name__)
 
-    # ── CORS: allow browser requests from any origin ───────────────────────
     @app.after_request
     def add_cors(response):
         response.headers["Access-Control-Allow-Origin"] = "*"
@@ -38,10 +27,8 @@ def create_app() -> Flask:
             r.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
             return r, 200
 
-    # ── 1. Singleton DB (one instance for entire app) ──────────────────────
     db = DatabaseManager()
 
-    # ── 2. EventBus + Observers (Observer pattern) ─────────────────────────
     bus = EventBus()
     audit_observer = AuditLogObserver()
     alert_observer = PerformanceAlertObserver(threshold=85.0)
@@ -50,13 +37,10 @@ def create_app() -> Flask:
     bus.subscribe("athlete_deleted", audit_observer.on_athlete_deleted)
     bus.subscribe("performance_recorded", alert_observer.on_performance_recorded)
 
-    # ── 3. Service (DIP: receives db + bus, not concrete drivers) ──────────
     service = AthleteService(db=db, event_bus=bus)
 
-    # ── 4. Seed demo data ──────────────────────────────────────────────────
-    _seed_demo_data(service)
 
-    # ── 5. Register blueprints ─────────────────────────────────────────────
+    _seed_demo_data(service)
     init_routes(service, audit_observer, alert_observer)
     app.register_blueprint(athletes_bp)
     app.register_blueprint(analytics_bp)
@@ -64,9 +48,7 @@ def create_app() -> Flask:
 
     return app
 
-
 def _seed_demo_data(service: AthleteService) -> None:
-    """Populate in-memory store with sample athletes and performances."""
     athletes_data = [
         {
             "name": "Mohamed Salah", "age": 32, "sport": "Football",
@@ -91,7 +73,6 @@ def _seed_demo_data(service: AthleteService) -> None:
             "rebounds_per_game": 11.5, "assists_per_game": 5.9,
         },
     ]
-
     for data in athletes_data:
         a = service.create_athlete(data)
         service.log_performance(a.id, {

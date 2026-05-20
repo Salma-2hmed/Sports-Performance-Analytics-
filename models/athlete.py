@@ -1,23 +1,12 @@
-"""
-models/athlete.py
------------------
-SOLID Principles Applied:
-- SRP  : Each class has one responsibility (data storage vs. behavior)
-- OCP  : Base Athlete is open for extension, closed for modification
-- LSP  : Subclasses (FootballPlayer, BasketballPlayer) are substitutable
-         for the base Athlete wherever it is expected
-- Runtime Attribute Injection: stats injected dynamically at runtime
-"""
+
 
 from dataclasses import dataclass, field
 from typing import Optional
 from datetime import date
 
 
-# ── SRP: pure data container ──────────────────────────────────────────────────
 @dataclass
 class Athlete:
-    """Base athlete entity — holds identity data only (SRP)."""
     id: int
     name: str
     age: int
@@ -26,9 +15,7 @@ class Athlete:
     nationality: str
     joined_date: date = field(default_factory=date.today)
 
-    # ── Runtime Attribute Injection ────────────────────────────────────────────
     def inject_stat(self, key: str, value) -> None:
-        """Inject arbitrary stats at runtime without modifying the class body."""
         object.__setattr__(self, key, value)
 
     def get_stat(self, key: str, default=None):
@@ -53,11 +40,9 @@ class Athlete:
         return base
 
 
-# ── OCP + LSP: extend without modifying Athlete ───────────────────────────────
 @dataclass
 class FootballPlayer(Athlete):
-    """Extends Athlete with football-specific defaults (OCP).
-    Is fully substitutable for Athlete (LSP)."""
+
     position: str = "Unknown"
     goals: int = 0
     assists: int = 0
@@ -79,7 +64,6 @@ class FootballPlayer(Athlete):
 
 @dataclass
 class BasketballPlayer(Athlete):
-    """Extends Athlete with basketball-specific defaults (OCP / LSP)."""
     position: str = "Unknown"
     points_per_game: float = 0.0
     rebounds_per_game: float = 0.0

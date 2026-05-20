@@ -275,7 +275,8 @@ function render(list) {
       ? [['PPG',a.points_per_game??'—'],['RPG',a.rebounds_per_game??'—'],['APG',a.assists_per_game??'—']]
       : [['Age',a.age],['Team',(a.team||'').slice(0,6)],['Sport',a.sport.slice(0,4)]];
     return `<div class="player-card" onclick="openPlayer(${a.id})">
-      <div class="card-top">
+      <div c
+      class="card-top">
         <div><div class="player-name">${a.name}</div><div class="player-meta">${a.team||'—'} · Age ${a.age}</div></div>
         <span class="sport-pill ${pc}">${a.sport}</span>
       </div>

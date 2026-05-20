@@ -1,26 +1,9 @@
-"""
-patterns/design_patterns.py
-----------------------------
-Implements four GoF patterns used across the project:
-
-1. Singleton    – DatabaseManager: single shared DB connection
-2. Observer     – EventBus + listeners: react to athlete / metric events
-3. Adapter      – ExternalDataAdapter: normalise third-party API payloads
-4. Flyweight    – SportConfigFlyweight: share immutable sport metadata
-"""
 
 import threading
 from typing import Callable, Dict, List, Any
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 1. SINGLETON — DatabaseManager
-# ══════════════════════════════════════════════════════════════════════════════
 class DatabaseManager:
-    """
-    Thread-safe Singleton that owns the in-memory store.
-    Only one instance exists for the entire application lifetime.
-    """
+
     _instance = None
     _lock = threading.Lock()
 
@@ -37,7 +20,6 @@ class DatabaseManager:
         self._performances: List[Any] = []
         self._next_id: int = 1
 
-    # ── CRUD helpers ──────────────────────────────────────────────────────────
     def save_athlete(self, athlete) -> Any:
         if not hasattr(athlete, "id") or athlete.id is None:
             athlete.id = self._next_id
@@ -64,16 +46,8 @@ class DatabaseManager:
     def get_performances(self, athlete_id: int) -> List[Any]:
         return [p for p in self._performances if p.athlete_id == athlete_id]
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 2. OBSERVER — EventBus
-# ══════════════════════════════════════════════════════════════════════════════
 class EventBus:
-    """
-    Publish / subscribe event bus.
-    Services subscribe to event types; the bus notifies all subscribers when
-    an event is published.
-    """
+
     def __init__(self):
         self._subscribers: Dict[str, List[Callable]] = {}
 
@@ -87,7 +61,6 @@ class EventBus:
 
 # ── Pre-wired observers (concrete listeners) ──────────────────────────────────
 class PerformanceAlertObserver:
-    """Notifies coaching staff when a metric crosses a threshold."""
     def __init__(self, threshold: float = 90.0):
         self.threshold = threshold
         self.alerts: List[str] = []
@@ -95,14 +68,13 @@ class PerformanceAlertObserver:
     def on_performance_recorded(self, data: dict) -> None:
         score = data.get("overall_score", 0)
         if score >= self.threshold:
-            msg = (f"🏅 HIGH PERFORMANCE ALERT: Athlete {data.get('athlete_id')} "
+            msg = (f" HIGH PERFORMANCE ALERT: Athlete {data.get('athlete_id')} "
                    f"scored {score:.1f}")
             self.alerts.append(msg)
             print(msg)
 
 
 class AuditLogObserver:
-    """Writes every athlete creation / deletion event to an audit list."""
     def __init__(self):
         self.log: List[str] = []
 
@@ -116,16 +88,8 @@ class AuditLogObserver:
         self.log.append(entry)
         print(entry)
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 3. ADAPTER — ExternalDataAdapter
-# ══════════════════════════════════════════════════════════════════════════════
 class ExternalDataAdapter:
-    """
-    Converts heterogeneous third-party payload shapes into the internal
-    athlete dict format, so the rest of the system never knows about
-    external schemas.
-    """
+
 
     @staticmethod
     def from_fifa_api(raw: dict) -> dict:
@@ -143,7 +107,6 @@ class ExternalDataAdapter:
 
     @staticmethod
     def from_nba_api(raw: dict) -> dict:
-        """Adapt a mock NBA-style JSON to our internal format."""
         return {
             "name": raw.get("full_name") or raw.get("name", "Unknown"),
             "age": raw.get("years_old") or raw.get("age", 0),
@@ -156,12 +119,7 @@ class ExternalDataAdapter:
             "assists_per_game": raw.get("apg", 0.0),
         }
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 4. FLYWEIGHT — SportConfigFlyweight
-# ══════════════════════════════════════════════════════════════════════════════
 class SportConfig:
-    """Immutable intrinsic state shared across many athlete objects (Flyweight)."""
     __slots__ = ("name", "max_team_size", "session_duration_min", "key_metrics")
 
     def __init__(self, name: str, max_team_size: int,
@@ -173,11 +131,7 @@ class SportConfig:
 
 
 class SportConfigFlyweight:
-    """
-    Factory that ensures at most one SportConfig object exists per sport name.
-    Memory is saved because thousands of athletes share the same SportConfig
-    instance rather than each storing duplicate data.
-    """
+
     _pool: Dict[str, SportConfig] = {}
 
     _defaults = {

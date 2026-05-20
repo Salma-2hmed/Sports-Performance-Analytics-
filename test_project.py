@@ -1,21 +1,8 @@
-"""
-tests/test_project.py
----------------------
-Comprehensive tests for:
-  - SOLID principles (SRP, OCP, LSP, ISP, DIP)
-  - Design patterns (Singleton, Observer, Adapter, Flyweight)
-  - Higher-Order Functions pipeline
-  - REST API (all CRUD + special endpoints)
-  - Runtime Attribute Injection
-"""
-
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
 import unittest
 from datetime import date
-
 from models.athlete import Athlete, FootballPlayer, BasketballPlayer
 from models.performance import PerformanceRecord
 from patterns.design_patterns import (
@@ -26,19 +13,14 @@ from patterns.design_patterns import (
 from services.athlete_service import AthleteService
 from api.app import create_app
 
-
-# ══════════════════════════════════════════════════════════════════════════════
 class TestModels(unittest.TestCase):
-    """SRP, OCP, LSP — model layer."""
 
     def test_base_athlete_srp(self):
-        """Athlete only holds data — SRP."""
         a = Athlete(1, "Ali", 25, "Football", "Al Ahly", "Egyptian")
         self.assertEqual(a.name, "Ali")
         self.assertIn("name", a.to_dict())
 
     def test_football_player_ocp(self):
-        """FootballPlayer extends Athlete without modifying it — OCP."""
         fp = FootballPlayer(2, "Salah", 32, "Football", "Liverpool", "Egyptian",
                             position="Forward", goals=28)
         d = fp.to_dict()
@@ -46,7 +28,6 @@ class TestModels(unittest.TestCase):
         self.assertEqual(d["sport"], "Football")
 
     def test_basketball_player_lsp(self):
-        """BasketballPlayer is a valid Athlete substitute — LSP."""
         bp = BasketballPlayer(3, "LeBron", 39, "Basketball", "Lakers", "American",
                               points_per_game=25.7)
 
@@ -56,16 +37,13 @@ class TestModels(unittest.TestCase):
         self.assertEqual(print_name(bp), "LeBron")  # LSP: accepted as Athlete
 
     def test_runtime_attribute_injection(self):
-        """inject_stat adds attributes at runtime."""
         a = Athlete(4, "Test", 20, "Tennis", "Team", "EG")
         a.inject_stat("aces", 12)
         self.assertEqual(a.get_stat("aces"), 12)
         self.assertIn("aces", a.to_dict())
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 class TestSingleton(unittest.TestCase):
-    """Singleton pattern — DatabaseManager."""
 
     def test_same_instance(self):
         db1 = DatabaseManager()
@@ -79,11 +57,7 @@ class TestSingleton(unittest.TestCase):
         db2 = DatabaseManager()
         self.assertIsNotNone(db2.get_athlete(99))
 
-
-# ══════════════════════════════════════════════════════════════════════════════
 class TestObserver(unittest.TestCase):
-    """Observer pattern — EventBus, AuditLogObserver, PerformanceAlertObserver."""
-
     def setUp(self):
         self.bus = EventBus()
         self.audit = AuditLogObserver()
@@ -112,7 +86,6 @@ class TestObserver(unittest.TestCase):
         self.assertEqual(len(self.alert.alerts), before)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 class TestAdapter(unittest.TestCase):
     """Adapter pattern — ExternalDataAdapter."""
 
@@ -135,9 +108,7 @@ class TestAdapter(unittest.TestCase):
         self.assertEqual(adapted["points_per_game"], 29.4)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 class TestFlyweight(unittest.TestCase):
-    """Flyweight pattern — SportConfigFlyweight."""
 
     def test_same_object_returned(self):
         cfg1 = SportConfigFlyweight.get("Football")
@@ -155,9 +126,7 @@ class TestFlyweight(unittest.TestCase):
         self.assertIn("goals", cfg.key_metrics)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 class TestService(unittest.TestCase):
-    """Service layer: DIP, ISP, HOF."""
 
     def setUp(self):
         # fresh isolated bus + service (DIP: injected)
@@ -220,10 +189,7 @@ class TestService(unittest.TestCase):
         self.assertGreater(len(self.audit.log), before)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
 class TestAPI(unittest.TestCase):
-    """REST API: CRUD + auth + special endpoints."""
-
     def setUp(self):
         self.app = create_app()
         self.client = self.app.test_client()
@@ -367,7 +333,4 @@ class TestAPI(unittest.TestCase):
         r = self.client.get("/athletes",
                             headers={"Authorization": "Bearer wrong-token"})
         self.assertEqual(r.status_code, 403)
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
+unittest.main(verbosity=2)

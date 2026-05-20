@@ -1,22 +1,11 @@
-"""
-utils/auth.py
--------------
-Simple token-based authentication for the REST API.
-"""
-
 import functools
 from flask import request, jsonify
-
-# In production this would be stored securely (env var / secrets manager)
 VALID_TOKENS = {
     "admin-token-001": {"role": "admin", "user": "admin"},
     "coach-token-002": {"role": "coach", "user": "coach1"},
     "analyst-token-003": {"role": "analyst", "user": "analyst1"},
 }
-
-
 def require_auth(f):
-    """Decorator: rejects requests that lack a valid Bearer token."""
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
         auth_header = request.headers.get("Authorization", "")
@@ -29,9 +18,7 @@ def require_auth(f):
         return f(*args, **kwargs)
     return wrapper
 
-
 def require_role(*roles):
-    """Decorator factory: restricts an endpoint to specific roles."""
     def decorator(f):
         @functools.wraps(f)
         @require_auth
