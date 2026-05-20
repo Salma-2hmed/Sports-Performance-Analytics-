@@ -136,15 +136,13 @@ class AthleteService(IAthleteReader, IAthleteWriter, IPerformanceLogger):
 
 
     def filter_athletes(self, predicate: Callable[[Athlete], bool]) -> List[Athlete]:
-        """HOF: filter athletes by any caller-supplied predicate."""
+    #HOF: filter athletes by any caller-supplied predicate."""
         return list(filter(predicate, self._db.get_all_athletes()))
 
     def map_athletes(self, transform: Callable[[Athlete], Any]) -> List[Any]:
-        """HOF: transform every athlete using a caller-supplied function."""
         return list(map(transform, self._db.get_all_athletes()))
 
     def aggregate_athletes(self, reducer: Callable, initial: Any) -> Any:
-        """HOF: fold all athletes with a caller-supplied reducer (reduce)."""
         return reduce(reducer, self._db.get_all_athletes(), initial)
 
     def process_pipeline(self, *steps: Callable) -> List[Any]:
